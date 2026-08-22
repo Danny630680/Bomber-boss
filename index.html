@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SMS Bomber · Simulator</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💣</text></svg>" />
+    <style>
+        /* ── reset & base ── */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(145deg, #0b0e1a 0%, #141a2b 100%);
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 540px;
+            background: rgba(22, 28, 46, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 40px;
+            padding: 32px 28px 38px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            transition: all 0.2s;
+        }
+
+        /* ── header ── */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 28px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .icon-bomb {
+            font-size: 30px;
+            filter: drop-shadow(0 0 8px rgba(255, 80, 80, 0.3));
+        }
+
+        .header h1 {
+            font-size: 22px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #f0f3ff 0%, #a0b4e0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.3px;
+        }
+
+        .badge {
+            background: rgba(255, 70, 70, 0.15);
+            color: #ff7b7b;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 4px 14px;
+            border-radius: 100px;
+            border: 1px solid rgba(255, 70, 70, 0.15);
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+        }
+
+        /* ── form ── */
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #8d9fc7;
+            margin-bottom: 6px;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+        }
+
+        .form-group .input-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+            background: rgba(12, 16, 28, 0.7);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            transition: border 0.25s, box-shadow 0.25s;
+            overflow: hidden;
+        }
+
+        .form-group .input-wrap:focus-within {
+            border-color: rgba(100, 160, 255, 0.4);
+            box-shadow: 0 0 0 4px rgba(100, 160, 255, 0.07);
+        }
+
+        .form-group .input-wrap .prefix {
+            padding: 0 0 0 16px;
+            color: #6a7ea8;
+            font-weight: 500;
+            font-size: 15px;
+            user-select: none;
+            opacity: 0.7;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            background: transparent;
+            border: none;
+            padding: 14px 16px;
+            color: #eaf0ff;
+            font-size: 15px;
+            font-weight: 500;
+            outline: none;
+            font-family: inherit;
+            resize: vertical;
+        }
+
+        .form-group input::placeholder,
+        .form-group textarea::placeholder {
+            color: #47567a;
+            font-weight: 400;
+        }
+
+        .form-group textarea {
+            min-height: 82px;
+            line-height: 1.5;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 14px;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+        }
+
+        /* custom number input */
+        .form-group input[type="number"] {
+            -moz-appearance: textfield;
+        }
+        .form-group input[type="number"]::-webkit-outer-spin-button,
+        .form-group input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* ── buttons ── */
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 15px 20px;
+            border: none;
+            border-radius: 18px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            letter-spacing: 0.2px;
+            font-family: inherit;
+        }
+
+        .btn:active {
+            transform: scale(0.97);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3b7bff, #1f4fc4);
+            color: #fff;
+            box-shadow: 0 8px 28px rgba(40, 100, 255, 0.25);
+        }
+        .btn-primary:hover:not(:disabled) {
+            box-shadow: 0 10px 36px rgba(40, 100, 255, 0.4);
+            transform: translateY(-2px);
+        }
+        .btn-primary:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #f84f4f, #b82020);
+            color: #fff;
+            box-shadow: 0 8px 28px rgba(255, 50, 50, 0.2);
+        }
+        .btn-danger:hover:not(:disabled) {
+            box-shadow: 0 10px 36px rgba(255, 50, 50, 0.35);
+            transform: translateY(-2px);
+        }
+        .btn-danger:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-outline {
+            background: rgba(255, 255, 255, 0.04);
+            color: #8d9fc7;
+            border: 1px solid rgba(255, 255, 255, 0.07);
+        }
+        .btn-outline:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.08);
+            color: #c8d6ff;
+        }
+        .btn-outline:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        /* ── progress ── */
+        .progress-section {
+            margin-top: 28px;
+        }
+
+        .progress-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: #7e92be;
+            margin-bottom: 8px;
+        }
+
+        .progress-stats span:last-child {
+            color: #b8cbff;
+            font-weight: 600;
+        }
+
+        .progress-track {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 100px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            border-radius: 100px;
+            background: linear-gradient(90deg, #3b7bff, #7fadff);
+            transition: width 0.15s ease-out;
+            box-shadow: 0 0 20px rgba(60, 120, 255, 0.3);
+        }
+
+        /* ── log ── */
+        .log-section {
+            margin-top: 24px;
+        }
+
+        .log-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .log-header h3 {
+            font-size: 13px;
+            font-weight: 600;
+            color: #6a7ea8;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+
+        .log-header .log-count {
+            font-size: 13px;
+            color: #4f6390;
+            background: rgba(255, 255, 255, 0.04);
+            padding: 2px 12px;
+            border-radius: 100px;
+        }
+
+        .log-box {
+            background: rgba(8, 11, 22, 0.6);
+            border-radius: 18px;
+            padding: 6px 6px 6px 0;
+            max-height: 160px;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .log-box::-webkit-scrollbar {
+            width: 4px;
+        }
+        .log-box::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .log-box::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 100px;
+        }
+
+        .log-entry {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 14px 8px 18px;
+            font-size: 13px;
+            color: #b0c4e8;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            animation: fadeSlide 0.2s ease;
+        }
+
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+
+        .log-entry .log-idx {
+            color: #3f5480;
+            font-weight: 500;
+            min-width: 28px;
+            font-size: 11px;
+        }
+
+        .log-entry .log-status {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .log-entry .log-msg {
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: #c8d9ff;
+        }
+
+        .log-entry .log-time {
+            color: #3f5480;
+            font-size: 11px;
+            white-space: nowrap;
+        }
+
+        .log-empty {
+            padding: 28px 14px;
+            text-align: center;
+            color: #3f5480;
+            font-size: 14px;
+            font-weight: 400;
+        }
+
+        @keyframes fadeSlide {
+            0% {
+                opacity: 0;
+                transform: translateY(-6px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ── status chip ── */
+        .status-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: #8d9fc7;
+            margin-top: 18px;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 100px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .status-chip .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #3f5480;
+            transition: background 0.3s;
+        }
+        .status-chip .dot.idle {
+            background: #3f5480;
+        }
+        .status-chip .dot.running {
+            background: #3b7bff;
+            box-shadow: 0 0 16px rgba(60, 120, 255, 0.5);
+            animation: pulse-dot 0.8s infinite alternate;
+        }
+        .status-chip .dot.done {
+            background: #2ecc71;
+            box-shadow: 0 0 16px rgba(46, 204, 113, 0.3);
+        }
+        .status-chip .dot.error {
+            background: #e74c3c;
+            box-shadow: 0 0 16px rgba(231, 76, 60, 0.3);
+        }
+
+        @keyframes pulse-dot {
+            0% {
+                opacity: 0.4;
+                transform: scale(0.85);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1.15);
+            }
+        }
+
+        /* ── responsive ── */
+        @media (max-width: 480px) {
+            .container {
+                padding: 22px 18px 28px;
+                border-radius: 28px;
+            }
+            .header h1 {
+                font-size: 19px;
+            }
+            .form-row {
+                flex-direction: column;
+                gap: 0;
+            }
+            .btn-group {
+                flex-direction: column;
+            }
+            .btn {
+                padding: 14px;
+            }
+            .log-entry {
+                font-size: 12px;
+                padding: 6px 10px 6px 14px;
+            }
+        }
+
+        /* ── utility ── */
+        .mt-1 {
+            margin-top: 6px;
+        }
+        .flex-center {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .gap-1 {
+            gap: 6px;
+        }
+        .text-center {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="app">
+
+        <!-- HEADER -->
+        <div class="header">
+            <div class="header-left">
+                <span class="icon-bomb">💣</span>
+                <h1>SMS Bomber</h1>
+            </div>
+            <span class="badge">simulator</span>
+        </div>
+
+        <!-- FORM -->
+        <form id="bombForm" autocomplete="off">
+
+            <div class="form-group">
+                <label>📱 Phone number</label>
+                <div class="input-wrap">
+                    <span class="prefix">+91</span>
+                    <input type="tel" id="phoneInput" placeholder="98765 43210" value="9876543210" />
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>✏️ Message</label>
+                <div class="input-wrap">
+                    <textarea id="msgInput" placeholder="Your message here...">Hello! This is a demo message.</textarea>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>🔢 Count</label>
+                    <div class="input-wrap">
+                        <input type="number" id="countInput" value="10" min="1" max="200" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>⏱️ Delay (ms)</label>
+                    <div class="input-wrap">
+                        <input type="number" id="delayInput" value="300" min="50" max="2000" step="50" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- BUTTONS -->
+            <div class="btn-group">
+                <button type="submit" class="btn btn-primary" id="startBtn">
+                    <span>▶</span> Start
+                </button>
+                <button type="button" class="btn btn-danger" id="stopBtn" disabled>
+                    <span>⏹</span> Stop
+                </button>
+                <button type="button" class="btn btn-outline" id="clearBtn">
+                    <span>✕</span> Clear
+                </button>
+            </div>
+        </form>
+
+        <!-- STATUS CHIP -->
+        <div class="status-chip" id="statusChip">
+            <span class="dot idle" id="statusDot"></span>
+            <span id="statusText">Ready</span>
+        </div>
+
+        <!-- PROGRESS -->
+        <div class="progress-section">
+            <div class="progress-stats">
+                <span id="progressLabel">0 / 0</span>
+                <span id="progressPercent">0%</span>
+            </div>
+            <div class="progress-track">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+        </div>
+
+        <!-- LOG -->
+        <div class="log-section">
+            <div class="log-header">
+                <h3>📋 Activity log</h3>
+                <span class="log-count" id="logCount">0 entries</span>
+            </div>
+            <div class="log-box" id="logBox">
+                <div class="log-empty">No messages sent yet.</div>
+            </div>
+        </div>
+
+        <!-- footer note -->
+        <div style="margin-top:20px; text-align:center; font-size:11px; color:#2f4068; letter-spacing:0.3px; border-top:1px solid rgba(255,255,255,0.03); padding-top:16px;">
+            ⚡ For educational &amp; demo purposes only · No real SMS are sent
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+
+            // ── DOM refs ──
+            const form = document.getElementById('bombForm');
+            const phoneInput = document.getElementById('phoneInput');
+            const msgInput = document.getElementById('msgInput');
+            const countInput = document.getElementById('countInput');
+            const delayInput = document.getElementById('delayInput');
+            const startBtn = document.getElementById('startBtn');
+            const stopBtn = document.getElementById('stopBtn');
+            const clearBtn = document.getElementById('clearBtn');
+            const progressFill = document.getElementById('progressFill');
+            const progressLabel = document.getElementById('progressLabel');
+            const progressPercent = document.getElementById('progressPercent');
+            const logBox = document.getElementById('logBox');
+            const logCount = document.getElementById('logCount');
+            const statusText = document.getElementById('statusText');
+            const statusDot = document.getElementById('statusDot');
+
+            // ── state ──
+            let running = false;
+            let cancelled = false;
+            let timerId = null;
+            let sentCount = 0;
+            let totalCount = 0;
+            let logEntries = [];
+
+            // ── helpers ──
+            function setStatus(text, type) {
+                statusText.textContent = text;
+                statusDot.className = 'dot ' + type;
+            }
+
+            function updateProgress(current, total) {
+                const pct = total > 0 ? Math.min(100, (current / total) * 100) : 0;
+                progressFill.style.width = pct + '%';
+                progressLabel.textContent = current + ' / ' + total;
+                progressPercent.textContent = Math.round(pct) + '%';
+            }
+
+            function addLogEntry(message, status = '✅') {
+                const now = new Date();
+                const time = now.toLocaleTimeString('en-IN', { hour12: false, hour: '2-digit', minute: '2-digit',
+                    second: '2-digit' });
+                const idx = logEntries.length + 1;
+                logEntries.push({ idx, message, time, status });
+
+                // remove empty placeholder
+                const empty = logBox.querySelector('.log-empty');
+                if (empty) empty.remove();
+
+                const entry = document.createElement('div');
+                entry.className = 'log-entry';
+                entry.innerHTML = `
+              <span class="log-idx">#${String(idx).padStart(2, '0')}</span>
+              <span class="log-status">${status}</span>
+              <span class="log-msg">${escapeHtml(message)}</span>
+              <span class="log-time">${time}</span>
+            `;
+                logBox.prepend(entry);
+
+                // trim if too many
+                while (logBox.children.length > 200) {
+                    logBox.removeChild(logBox.lastChild);
+                    logEntries.shift();
+                }
+
+                logCount.textContent = logEntries.length + ' entries';
+                // auto-scroll to top
+                logBox.scrollTop = 0;
+            }
+
+            function escapeHtml(str) {
+                const div = document.createElement('div');
+                div.textContent = str;
+                return div.innerHTML;
+            }
+
+            function clearLog() {
+                logEntries = [];
+                logBox.innerHTML = `<div class="log-empty">No messages sent yet.</div>`;
+                logCount.textContent = '0 entries';
+            }
+
+            // ── core bomber (simulated) ──
+            function startBomber() {
+                if (running) return;
+
+                // read values
+                const phone = phoneInput.value.trim();
+                const message = 
